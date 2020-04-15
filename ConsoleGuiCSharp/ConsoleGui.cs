@@ -218,7 +218,6 @@ namespace ConsoleGuiCSharp
                 return getElementByMultipleChoice(question, inputArray.ToList());
             }
             
-            
             public static void list(IEnumerable iterable)
             {
 
@@ -241,6 +240,56 @@ namespace ConsoleGuiCSharp
                 
                 
             }
+
+            public static class DataManager
+            {
+                // dict that holds all dicts of registered objects accessed by key: 
+                private static Dictionary<Type, Dictionary<string, Element>> mainDict = new Dictionary<Type, Dictionary<string, Element>>();
+                
+                // function that adds element to its own dict and if it doesn't exist, creates that dict 
+                public static void add(string key, Element inp_element)
+                {
+                    Type inp_type = inp_element.GetType();
+                    if (mainDict.ContainsKey(inp_type))
+                    {
+                        mainDict[inp_type].Add(key, inp_element);
+                    }
+                    else
+                    {
+                        mainDict.Add(inp_type, new Dictionary<string, Element>());
+                        mainDict[inp_type].Add(key, inp_element);
+                    }
+
+                }
+
+                //same as above but uses int as key (int get converted to string)
+                public static void add(int key, Element inp_element)
+                {
+                    add(key.ToString(), inp_element);
+                }
+
+
+
+                public static void listDictOfTypeFrom(Element inp_element)
+                {
+                    Type inp_type = inp_element.GetType();
+                    if (mainDict.ContainsKey(inp_type))
+                    {
+                        list(mainDict[inp_type]);
+                    }
+                    else
+                    {
+                        debugLine("no dict of element-type found");
+                    }
+                }
+                
+                
+                
+                
+                
+                
+            }
+            
             
         }
 }
