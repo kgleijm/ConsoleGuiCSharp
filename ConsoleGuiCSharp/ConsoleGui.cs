@@ -77,6 +77,7 @@ namespace ConsoleGuiCSharp
                 return openQuestion(question, null, null);
             }
             
+            //method that returns int representing ans of multipleChoice question
             public static int multipleChoice(string question, params string[] options)
             {
                 Console.Out.WriteLine("\n" + question);
@@ -137,6 +138,7 @@ namespace ConsoleGuiCSharp
                 }
             } 
             
+            //method that returns int
             public static int getInteger(string question)
             {
                 Console.Out.WriteLine("\n" + question);
@@ -164,11 +166,13 @@ namespace ConsoleGuiCSharp
                 }
             }
 
+            //prints Debug line
             public static void debugLine(string line)
             {
                 Console.Out.WriteLine("# DEBUG #" + line);
             }
-
+            
+            //checks if all values given are free of ConsoleGui ERRORS
             public static bool noErrorsInValue(params string[] values)
             {
                 foreach (var value in values)
@@ -181,15 +185,33 @@ namespace ConsoleGuiCSharp
                 return true;
             }
             
-            
+            //abstract method to make handling classes with ConsoleGui functionality easier
             public abstract class Element
             {
+                private string key;
+                
                 public abstract void list();
 
                 public abstract string getMPQListing();
 
+                public void setKey(string inp_key)
+                {
+                    key = inp_key;
+                }
+
+                public string getKey()
+                {
+                    return key;
+                }
+
+                public Element()
+                {
+                    setKey(DataManager.getUniqueKey(this));
+                }
+
             }
 
+            //methods that return a ConsoleGui Element from iterable by Multiplechoice
             public static Element getElementByMultipleChoice(String question, List<Element> inputList)
             {
                 // extract possible ans as string from elements
@@ -218,6 +240,7 @@ namespace ConsoleGuiCSharp
                 return getElementByMultipleChoice(question, inputArray.ToList());
             }
             
+            //method that prints out the list() strings of all ConsoleGui Elements
             public static void list(IEnumerable iterable)
             {
 
@@ -241,11 +264,14 @@ namespace ConsoleGuiCSharp
                 
             }
 
+           
+            
+            
             public static class DataManager
             {
                 // dict that holds all dicts of registered objects accessed by key: 
                 private static Dictionary<Type, Dictionary<string, Element>> mainDict = new Dictionary<Type, Dictionary<string, Element>>();
-                
+
                 // function that adds element to its own dict and if it doesn't exist, creates that dict 
                 public static void add(string key, Element inp_element)
                 {
@@ -259,37 +285,91 @@ namespace ConsoleGuiCSharp
                         mainDict.Add(inp_type, new Dictionary<string, Element>());
                         mainDict[inp_type].Add(key, inp_element);
                     }
+                    inp_element.setKey(key);
 
                 }
 
-                //same as above but uses int as key (int get converted to string)
+                public static void add(Element inp_element)
+                {
+                    add(getUniqueKey(inp_element), inp_element);
+                }
+
+                // Same as above but uses int as key (int get converted to string)
                 public static void add(int key, Element inp_element)
                 {
                     add(key.ToString(), inp_element);
                 }
 
+                // Generate unique keys for elements
+                private static int lastUniqueKey = 0;
 
+                public static string getUniqueKey(Element inp_element)
+                {
+                    Type type = inp_element.GetType();
+                    if (mainDict.ContainsKey(type))
+                    {
+                        while (mainDict[type].ContainsKey(lastUniqueKey.ToString()))
+                        {
+                            lastUniqueKey++;
+                        }
+                        return lastUniqueKey.ToString();
+                    }
+                    else
+                    {
+                        lastUniqueKey++;
+                        return lastUniqueKey.ToString();
+                    }
+                    
+                }
 
-                public static void listDictOfTypeFrom(Element inp_element)
+                public static string listDictOfTypeFrom(Element inp_element)
                 {
                     Type inp_type = inp_element.GetType();
                     if (mainDict.ContainsKey(inp_type))
                     {
                         list(mainDict[inp_type]);
+                        return "SUCCES";
                     }
                     else
                     {
                         debugLine("no dict of element-type found");
+                        return "ERROR";
                     }
                 }
-                
-                
-                
-                
-                
-                
+
+                // returns ConsoleGui Element from dict
+                public static Element ChooseElementInDictOfTypeFrom(string question, Element inp_element)
+                {
+                    Type inp_type = inp_element.GetType();
+                    if (mainDict.ContainsKey(inp_type))
+                    {
+                        return getElementByMultipleChoice(question, mainDict[inp_type]);
+                    }
+                    else
+                    {
+                        debugLine("no dict of element-type found");
+                        return null;
+                    }
+                }
+
+                // Removes ConsoleGui Element from dict
+                public static string RemoveElementInDictOfTypeFrom(string question, Element inp_element)
+                {
+                    Element ElementToBeRemoved = ChooseElementInDictOfTypeFrom(question, inp_element);
+                    if(ElementToBeRemoved == null)
+                    {
+                        return "ERROR";
+                    }
+                    else
+                    {
+                        string removeKey = inp_element.getKey();
+                        Type typeOfinp_element = ElementToBeRemoved.GetType();
+                        debugLine("lenght of dict: " + mainDict[typeOfinp_element].Count);
+                        debugLine(mainDict[typeOfinp_element].Remove(removeKey).ToString());
+                        debugLine("lenght of dict: " + mainDict[typeOfinp_element].Count);
+                        return "SUCCES";
+                    }
+                }
             }
-            
-            
-        }
+    }
 }
