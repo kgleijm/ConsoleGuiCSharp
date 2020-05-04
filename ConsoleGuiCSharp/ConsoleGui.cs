@@ -7,6 +7,15 @@ namespace ConsoleGuiCSharp
 {
     public class ConsoleGui
     {
+            //method that clears terminal
+            public static void clearTerminal()
+            {
+                for (int i = 0; i < 100; i++)
+                {
+                    Console.Out.WriteLine(" ");
+                }
+            }
+        
             //method that will create a choice dialog
             public static string openQuestion(string question, string[] checks, string negativeResponse)
             {
@@ -264,9 +273,77 @@ namespace ConsoleGuiCSharp
                 
             }
 
-           
-            
-            
+
+            public static class StateEngine
+            {
+                private static State currentState = null;
+                private static bool running = false;
+
+                // stops the state engine
+                public static void stop()
+                {
+                    running = false;
+                }
+
+                // starts the state engine
+                public static void start()
+                {
+                    running = true;
+                    while (running)
+                    {
+                        currentState.run();
+                    }
+                }
+
+                // set new state
+                public static void setState(State newState)
+                {
+                    currentState = newState;
+                    if (!running)
+                    {
+                       start();
+                    }
+                }
+                
+                // lets user choose from given states by their description
+                public static void setStateByMultipleChoice(string question, params State[] states)
+                {
+                    string[] descs = new string[states.Length];
+                    for (int i = 0; i < states.Length; i++)
+                    {
+                        descs[i] = i + states[i].getDescription();
+                    }
+                    setState(states[multipleChoice(question, descs)]);
+                }
+                
+                // class thate contains an action and description of the state to
+                // minimize boilerplate code
+                public class State
+                {
+                    
+                    private Action action;
+                    private string description;
+                    
+                    public State( string inp_description, Action inp_action)
+                    {
+                        action = inp_action;
+                        description = inp_description;
+                    }
+
+                    public void run()
+                    {
+                        action();
+                    }
+
+                    public string getDescription()
+                    {
+                        return description;
+                    }
+                    
+                }
+                
+            }
+
             public static class DataManager
             {
                 // dict that holds all dicts of registered objects accessed by key: 
